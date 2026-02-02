@@ -17,6 +17,11 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v1'
+        with:
+          install_components: 'gke-gcloud-auth-plugin'
+
       - name: Configure Docker
         run: gcloud auth configure-docker europe-central2-docker.pkg.dev
 
@@ -27,11 +32,6 @@ jobs:
 
       - name: Deploy to GKE
         run: |
-          # Використовуємо твою назву кластера та локацію
           gcloud container clusters get-credentials music-cluster --region europe-central2 --project ${{ secrets.GCP_PROJECT_ID }}
-
-          # Команда оновлення: міняємо стару версію на нову по хешу коміту
           kubectl set image deployment/node-service-deployment node-service-container=europe-central2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/microservices-repo/node-service:${{ github.sha }}
-
-          # Чекаємо, поки Kubernetes успішно перезапустить поди
           kubectl rollout status deployment/node-service-deployment
