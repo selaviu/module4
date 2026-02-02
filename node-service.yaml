@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-service
+  template:
+    metadata:
+      labels:
+        app: node-service
+    spec:
+      containers:
+        - name: node-service-container
+          image: europe-central2-docker.pkg.dev/lithe-aileron-486115-t3/microservices-repo/node-service:v1
+          ports:
+            - containerPort: 7777
+          resources:
+            requests:
+              memory: '256Mi'
+              cpu: '100m'
+            limits:
+              memory: '512Mi'
+          env:
+            - name: HOST
+              value: '0.0.0.0'
+            - name: PORT
+              value: '7777'
+
+            - name: MONGO_ADDRESS
+              value: 'mongodb://mongodb-service:27017/mySampleDb'
+
+            - name: SONGS_SERVICE_URL
+              value: 'http://songs-service-svc:8088'
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-service-svc
+spec:
+  selector:
+    app: node-service
+  ports:
+    - protocol: TCP
+      port: 7777
+      targetPort: 7777
+  type: ClusterIP
